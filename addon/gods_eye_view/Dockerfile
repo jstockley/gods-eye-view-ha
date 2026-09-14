@@ -3,16 +3,20 @@ ARG BUILD_FROM
 FROM $BUILD_FROM
 
 # Upstream requires Node >=24.14.0 <25 or >=26 <27 — 25.x is explicitly
-# excluded (EOL). Pin a matching version rather than "latest".
-RUN apk add --no-cache nodejs~24 npm~10
+# excluded (EOL). Alpine's apk repos don't carry Node 24 yet, so this uses
+# the Debian-based HA build image (see build.yaml) and installs Node via
+# NodeSource, which tracks exact major versions.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl ca-certificates gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Build context is the repo root (see the docker build command in
 # README.md) — this copies the actual app source living alongside this
-# add-on folder, rather than re-cloning it from GitHub. Add a
-# .dockerignore at the repo root excluding `addon/`, `.git`, and
-# `node_modules` so this doesn't pull in the add-on packaging itself.
+# add-on folder, rather than re-cloning it from GitHub.
 COPY package.json package-lock.json ./
 RUN npm ci
 
