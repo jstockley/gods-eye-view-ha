@@ -7,34 +7,34 @@ FROM $BUILD_FROM
 # the Debian-based HA build image (see build.yaml) and installs Node via
 # NodeSource, which tracks exact major versions.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl ca-certificates gnupg \
+        curl ca-certificates gnupg git \
     && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Build context is the repo root (see the docker build command in
-# README.md) — this copies the actual app source living alongside this
-# add-on folder, rather than re-cloning it from GitHub.
-COPY package.json package-lock.json ./
-RUN npm ci
+# Home Assistant's Supervisor builds each add-on using ONLY that add-on's
+# own folder as the build context (not the whole repo) — confirmed via
+# the official builder's --target flag and how community add-ons are
+# built. So the app source has to be fetched here, rather than COPY'd
+# from alongside this Dockerfile like the local-test version did.
+#
+# TODO: pin a specific tag/commit once you've cut a release, instead of
+# tracking main — a moving branch means the add-on could change under
+# installed users without a version bump.
+ARG GEV_REF=main
+RUN git clone --depth 1 --branch ${GEV_REF} \
+    https://github.com/jstockley/gods-eye-view-ha.git .
 
-COPY . .
+RUN npm ci
 
 # NOTE: intentionally NOT running `npm run build` + `vite preview`.
 # The documented, tested path is the dev server itself
 # (`npm run dev -- --host 0.0.0.0 --port <port>`), which is also what
 # brokers all provider keys server-side via the integrated Vite plugin.
-# `vite preview` may not mount that same middleware — untested, don't
-# switch to it without checking build/vite.js.
 
-COPY addon/gods_eye_view/rootfs /
-
-# TEMPORARY debug step — shows exactly what got copied, to diagnose a
-# path-mismatch build failure. Remove once the real chmod step below works.
-RUN echo "--- /etc/services.d ---" && find /etc/services.d -type f -o -type d \
-    && echo "--- /etc/cont-init.d ---" && find /etc/cont-init.d -type f -o -type d
+COPY rootfs /
 
 RUN chmod a+x /etc/services.d/gods_eye_view/run \
     && chmod a+x /etc/cont-init.d/*.sh
