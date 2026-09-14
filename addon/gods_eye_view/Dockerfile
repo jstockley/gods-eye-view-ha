@@ -31,6 +31,11 @@ COPY . .
 
 COPY addon/gods_eye_view/rootfs /
 
+# TEMPORARY debug step — shows exactly what got copied, to diagnose a
+# path-mismatch build failure. Remove once the real chmod step below works.
+RUN echo "--- /etc/services.d ---" && find /etc/services.d -type f -o -type d \
+    && echo "--- /etc/cont-init.d ---" && find /etc/cont-init.d -type f -o -type d
+
 RUN chmod a+x /etc/services.d/gods_eye_view/run \
     && chmod a+x /etc/cont-init.d/*.sh
 
