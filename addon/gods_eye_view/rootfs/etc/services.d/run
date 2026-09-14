@@ -1,0 +1,16 @@
+#!/usr/bin/with-contenv bashio
+# ------------------------------------------------------------------------
+# Runs the documented "share on LAN" path from the upstream README, bound
+# to the ingress port. This is the same dev server that mounts the
+# server-side key-broker middleware (not `vite preview`, which is untested
+# for that).
+#
+# TODO once this is actually running: confirm CesiumJS's static assets
+# and the Vite dev server's own asset URLs resolve correctly under HA's
+# Ingress sub-path rewriting. If they don't, check vite.config.js for a
+# `base` setting and whether it needs to be relative.
+# ------------------------------------------------------------------------
+
+bashio::log.info "Starting God's Eye View on port 8099..."
+cd /app || exit 1
+exec npm run dev -- --host 0.0.0.0 --port 8099
