@@ -13,6 +13,7 @@ export function createBrowserViteConfig({
   const shared = host === '0.0.0.0' || host === '::';
 
   return {
+    base: './',
     plugins: [cesium(), applicationHtmlPlugin(), ...plugins],
     ...(publicDir === undefined ? {} : { publicDir }),
     server: {
