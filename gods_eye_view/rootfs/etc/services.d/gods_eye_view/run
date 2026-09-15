@@ -19,4 +19,16 @@ fi
 
 bashio::log.info "Starting God's Eye View on port ${PORT}..."
 cd /app || exit 1
-exec npm run dev
+
+# `npm run dev`'s asset URLs don't rebase correctly under Home Assistant's
+# Ingress sub-path, even with base: './' set — that's a known limitation
+# of Vite's dev server, not a config mistake. Production build + preview
+# handles path rebasing correctly, at the cost of a real build on every
+# start (unavoidable: GOOGLE_MAPS_API_KEY/CESIUM_ION_TOKEN are baked in via
+# Vite's `define` at build time, and the real values only exist once this
+# script's .env has been written from the add-on's options).
+bashio::log.info "Building production assets (this can take a while)..."
+npm run build
+
+bashio::log.info "Starting preview server..."
+exec npm run preview -- --host "${HOST}" --port "${PORT}"
