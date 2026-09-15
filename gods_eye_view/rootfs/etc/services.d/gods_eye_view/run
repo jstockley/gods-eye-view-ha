@@ -11,6 +11,12 @@
 export HOST=0.0.0.0
 export PORT=8099
 
+LOG_LEVEL=$(bashio::config 'log_level')
+if [ "${LOG_LEVEL}" = "debug" ]; then
+  export DEBUG=vite:*
+  bashio::log.info "Debug logging enabled (DEBUG=vite:*) — this is noisy."
+fi
+
 bashio::log.info "Starting God's Eye View on port ${PORT}..."
 cd /app || exit 1
 exec npm run dev

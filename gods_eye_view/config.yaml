@@ -1,5 +1,5 @@
 name: "God's Eye View"
-version: "0.1.2"
+version: "0.1.0"
 slug: "gods_eye_view"
 description: "Live 3D spatial intelligence globe — aircraft, ships, satellites, CCTV and more, on a photorealistic globe."
 url: "https://github.com/jstockley/gods-eye-view-ha"
@@ -27,6 +27,7 @@ options:
   opensky_auth_mode: "anon"
   ratelimit_openai_per_min: 20
   ratelimit_google_per_min: 60
+  log_level: "info"
 
 schema:
   google_maps_api_key: str?
@@ -38,6 +39,7 @@ schema:
   opensky_auth_mode: "list(anon|oauth)"
   ratelimit_openai_per_min: int
   ratelimit_google_per_min: int
+  log_level: "list(info|debug)"
 
 # Persists the generated .env (and any Vite/CesiumJS caches) across
 # add-on restarts and updates.
