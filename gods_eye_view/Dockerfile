@@ -20,10 +20,17 @@ WORKDIR /app
 # built. So the app source has to be fetched here, rather than COPY'd
 # from alongside this Dockerfile like the local-test version did.
 #
+# Docker's build cache only checks whether this RUN instruction's TEXT
+# changed, not whether the remote branch has new commits — so without
+# this ADD line, pushing new commits to main would silently reuse a
+# stale cached checkout forever. Fetching the commit API's response
+# forces Docker to re-run the clone whenever the branch actually moves.
+#
 # TODO: pin a specific tag/commit once you've cut a release, instead of
 # tracking main — a moving branch means the add-on could change under
 # installed users without a version bump.
 ARG GEV_REF=main
+ADD https://api.github.com/repos/jstockley/gods-eye-view-ha/commits/${GEV_REF} /tmp/gev-cache-bust.json
 RUN git clone --depth 1 --branch ${GEV_REF} \
     https://github.com/jstockley/gods-eye-view-ha.git .
 
