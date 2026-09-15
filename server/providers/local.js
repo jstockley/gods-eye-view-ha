@@ -20,6 +20,20 @@ import { googlePlacesContextProxy } from './places.js';
 import { keySetupEndpoint } from '../standalone/key-setup.js';
 
 /** Construct the local provider plugins in their established order. */
+/** If a plugin only wires up dev-server middleware, mirror it onto the
+ * preview server too — several provider plugins (overpass, adsb.lol, etc.)
+ * only implement configureServer, which leaves their endpoints 404ing
+ * under `vite preview`. Safe to do generically: these are plain proxy
+ * middlewares using server.middlewares.use(...), not dev-only APIs like
+ * the module graph or HMR websocket. */
+function withPreviewSupport(plugin) {
+  if (plugin && plugin.configureServer && !plugin.configurePreviewServer) {
+    return { ...plugin, configurePreviewServer: plugin.configureServer };
+  }
+  return plugin;
+}
+
+/** Construct the local provider plugins in their established order. */
 function localProviderPlugins() {
   return [
     openSkyProxy(),
@@ -42,9 +56,8 @@ function localProviderPlugins() {
     openAiRealtimeProxy(),
     googlePlacesContextProxy(),
     keySetupEndpoint(),
-  ];
+  ].map(withPreviewSupport);
 }
-
 export { localProviderPlugins };
 
 export {
