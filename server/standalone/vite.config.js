@@ -22,3 +22,4 @@ export default defineConfig(({ mode }) => {
     defaultLon: process.env.DEFAULT_LON,
     defaultZoomM: process.env.DEFAULT_ZOOM_M,
   });
+});
