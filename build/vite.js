@@ -9,6 +9,9 @@ export function createBrowserViteConfig({
   cesiumToken,
   host = 'localhost',
   port = 4173,
+  defaultLat,
+  defaultLon,
+  defaultZoomM,
 } = {}) {
   const shared = host === '0.0.0.0' || host === '::';
   const securityHeaders = shared
@@ -46,6 +49,9 @@ export function createBrowserViteConfig({
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(googleApiKey),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(cesiumToken),
+      'import.meta.env.DEFAULT_LAT': JSON.stringify(defaultLat),
+      'import.meta.env.DEFAULT_LON': JSON.stringify(defaultLon),
+      'import.meta.env.DEFAULT_ZOOM_M': JSON.stringify(defaultZoomM),
     },
     build: { chunkSizeWarningLimit: 1500 },
   };

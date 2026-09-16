@@ -28,6 +28,8 @@ options:
   ratelimit_openai_per_min: 20
   ratelimit_google_per_min: 60
   log_level: "info"
+  default_postcode: ""
+  default_zoom_m: 600
 
 schema:
   google_maps_api_key: str?
@@ -40,6 +42,8 @@ schema:
   ratelimit_openai_per_min: int
   ratelimit_google_per_min: int
   log_level: "list(info|debug)"
+  default_postcode: str?
+  default_zoom_m: int?
 
 # Persists the generated .env (and any Vite/CesiumJS caches) across
 # add-on restarts and updates.
