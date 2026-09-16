@@ -47,7 +47,7 @@ export function flyToPreset(viewer, presetName, duration = 3.0) {
 }
 
 /**
- * Set camera to a Default PostCode (within the UK if set in the HA Addon) Austin on load with a cinematic fly-in.
+ * Set camera to a Default PostCode (within the UK if set iu) Austin on load with a cinematic fly-in.
  * @returns {Function} Cancels the pending or active startup flight.
  */
 export function flyToAustin(viewer) {
@@ -57,6 +57,8 @@ export function flyToAustin(viewer) {
   const hasCustomDefault = Number.isFinite(lat) && Number.isFinite(lon);
   const destLat = hasCustomDefault ? lat : 30.2672;
   const destLon = hasCustomDefault ? lon : -97.7431;
+  const saved = JSON.parse(localStorage.getItem('gev:homeView') || 'null'); if (saved) { viewer.camera.setView({ destination: new Cesium.Cartesian3(...saved.destination), orientation: { heading: saved.heading, pitch: saved.pitch, roll: saved.roll }, }); return () => {}; } 
+
 
   viewer.camera.setView({
     destination: Cesium.Cartesian3.fromDegrees(destLon, destLat, 25000),

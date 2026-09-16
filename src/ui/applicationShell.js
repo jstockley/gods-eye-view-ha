@@ -615,6 +615,7 @@ export class StyleManager {
     this._initGlobalContextPanel();
     this._initLocationBar();
     this._initShareButton();
+    this._initSetHomeViewButton();
     this._initClearSelectedLayersButton();
     this._initHUDToggle();
     this._initModels3dToggle();
@@ -4995,6 +4996,12 @@ export class StyleManager {
       const success = await this.shareLinkManager.copyLink();
       this._showToast(success ? 'Link copied!' : 'Copy failed');
     });
+  }
+   _initSetHomeViewButton() { 
+    this._lifetime.listen(this._setHomeViewBtn, 'click', () => { 
+      const camera = this.viewer.camera; localStorage.setItem('gev:homeView', JSON.stringify({ destination: [camera.position.x, camera.position.y, camera.position.z], heading: camera.heading, pitch: camera.pitch, roll: camera.roll, }));
+      this._showToast('Saved as default view');
+    }); 
   }
 
   /**
