@@ -36,6 +36,15 @@ all gated so they only change behaviour when the server is "shared"
   `<img>.src` / `<video>.src` rather than fetched — so the `fetch` patch
   above never sees them. Fixed at the two URL builders (`frameUrlFor`/
   `mediaUrlFor`) instead, with the same `document.baseURI` resolution.
+- **`src/voice/control.js`** — the voice-control mic icon's `<img src="/mic.svg">`
+  had the same problem; fixed by making it relative (`src="mic.svg"`)
+  since it's served from the same directory as `index.html`, so the
+  browser's normal relative-URL resolution against the page's own
+  (Ingress-prefixed) URL just works, no JS needed.
+- **`src/voice/realtimeController.js`** — the voice debug-log beacon uses
+  `navigator.sendBeacon`, which (like asset `src` attributes above)
+  doesn't go through `fetch()` either, so it needed the same
+  `document.baseURI` resolution applied separately.
 - **`build/vite.js`** — `base: './'` so built asset URLs are relative, not
   root-absolute; a matching `preview` block (Vite resolves `preview`
   options separately from `server` options) so `allowedHosts` and the

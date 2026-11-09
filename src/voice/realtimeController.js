@@ -2155,14 +2155,29 @@ function releaseStartResources({ localStream = null, localPc = null } = {}) {
   }
 }
 
+// navigator.sendBeacon doesn't go through fetch(), so the global fetch
+// patch in src/main.js (which resolves a root-absolute '/api/...' path
+// against document.baseURI instead of the domain root, for Home
+// Assistant Ingress's sub-path) never applies here. Resolve it the same
+// way right before use instead — harmless outside Ingress.
+function resolveDebugLogUrl() {
+  if (typeof document === 'undefined') return DEBUG_LOG_URL;
+  try {
+    return new URL(DEBUG_LOG_URL.slice(1), document.baseURI).toString();
+  } catch {
+    return DEBUG_LOG_URL;
+  }
+}
+
 function postDebugLog(record) {
   try {
     const body = JSON.stringify(record);
+    const debugLogUrl = resolveDebugLogUrl();
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: 'application/json' });
-      if (navigator.sendBeacon(DEBUG_LOG_URL, blob)) return;
+      if (navigator.sendBeacon(debugLogUrl, blob)) return;
     }
-    fetch(DEBUG_LOG_URL, {
+    fetch(debugLogUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
