@@ -43,12 +43,21 @@ all gated so they only change behaviour when the server is "shared"
 - **Production build, not dev server** — the add-on runs `npm run build`
   then `npm run preview`, not `npm run dev`. Vite's dev server doesn't
   reliably rebase served asset URLs for an arbitrary sub-path; a real
-  production build does. This means a real build runs on every container
-  start (not baked into the image), because `GOOGLE_MAPS_API_KEY` /
-  `CESIUM_ION_TOKEN` are baked in via Vite's `define` at build time, and the
-  real values only exist once the add-on's `.env` has been written from
-  Home Assistant's options — so expect a genuinely slower startup than a
-  plain `npm run dev` would give you.
+  production build does. A build has to run at least once, because
+  `GOOGLE_MAPS_API_KEY` / `CESIUM_ION_TOKEN` are baked in via Vite's
+  `define` at build time, and the real values only exist once the add-on's
+  `.env` has been written from Home Assistant's options.
+- **Build caching across restarts** — rebuilding on every single container
+  start/restart is heavy on low-spec hardware (a Raspberry Pi can genuinely
+  OOM partway through a bundle, causing a crash-restart loop that looks
+  like everything going slow and provider requests failing). The run
+  script hashes the generated `.env` together with the cloned app commit
+  (`/app/.gev-commit`, written at image build time) and skips `npm run
+  build` whenever neither has changed since the last successful build,
+  reusing the previous `dist/` instead. Both the hash and the built
+  `dist/` live on the same persistent `addon_config` volume as `.env`, so
+  they survive restarts; a genuine key change or an add-on update (new
+  app code → new commit SHA) still forces a rebuild.
 - **`HOST`/`PORT` as real environment variables**, not `vite --host/--port`
   CLI flags — the app's own `shared`-mode detection
   (`server/standalone/vite.config.js`) reads `process.env.HOST`, which CLI
@@ -133,6 +142,11 @@ that's expected, not a bug, when just checking the app itself boots.
       something to leave on.
 - [ ] Not tested on `aarch64`/`armv7` — only `amd64` has been built and run
       end-to-end so far.
+- [ ] If a build ever fails (e.g. the device ran out of memory mid-build),
+      the run script deliberately exits rather than serving a stale/
+      missing `dist/` — check the Log tab for a fatal "Production build
+      failed" line and restart the add-on once whatever caused the
+      failure (usually memory pressure) has cleared.
 - [ ] Home Assistant's own Supervisor occasionally needs updating before
       add-on updates will apply at all (`'AppManager.update' blocked from
       execution, supervisor needs to be updated first`) — unrelated to this

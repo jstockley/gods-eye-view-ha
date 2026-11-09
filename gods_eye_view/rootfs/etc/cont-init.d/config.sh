@@ -59,3 +59,17 @@ chmod 600 "${ENV_STORE}"
 ln -sf "${ENV_STORE}" /app/.env
 
 bashio::log.info "Wrote /app/.env from add-on options."
+
+# ------------------------------------------------------------------------
+# Persist the production build output across restarts too, not just the
+# .env — npm run build on every start/restart is heavy on low-spec
+# hardware. The run script decides whether to rebuild (based on the
+# config/app-code hash below); if it skips rebuilding, this symlinked
+# dist/ from the previous build is what `vite preview` serves.
+# ------------------------------------------------------------------------
+DIST_STORE="/config/addons_config/gods_eye_view/dist"
+mkdir -p "${DIST_STORE}"
+if [ ! -L /app/dist ]; then
+  rm -rf /app/dist
+  ln -s "${DIST_STORE}" /app/dist
+fi

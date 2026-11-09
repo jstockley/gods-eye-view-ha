@@ -23,12 +23,32 @@ cd /app || exit 1
 # `npm run dev`'s asset URLs don't rebase correctly under Home Assistant's
 # Ingress sub-path, even with base: './' set — that's a known limitation
 # of Vite's dev server, not a config mistake. Production build + preview
-# handles path rebasing correctly, at the cost of a real build on every
-# start (unavoidable: GOOGLE_MAPS_API_KEY/CESIUM_ION_TOKEN are baked in via
-# Vite's `define` at build time, and the real values only exist once this
-# script's .env has been written from the add-on's options).
-bashio::log.info "Building production assets (this can take a while)..."
-npm run build
+# handles path rebasing correctly. GOOGLE_MAPS_API_KEY/CESIUM_ION_TOKEN
+# are baked in via Vite's `define` at build time, and the real values
+# only exist once this script's .env has been written from the add-on's
+# options — so a build has to happen at least once per set of keys.
+#
+# Rebuilding on every single restart is expensive on low-spec hardware
+# (CPU-bound bundling, real memory pressure — can OOM-loop on something
+# like a Pi). So this skips the rebuild whenever BOTH the add-on's .env
+# contents AND the cloned app commit are unchanged since the last build,
+# and reuses the persisted dist/ (symlinked in cont-init) instead.
+HASH_STORE="/config/addons_config/gods_eye_view/.build_hash"
+CURRENT_HASH=$(cat /app/.env /app/.gev-commit 2>/dev/null | sha256sum | awk '{print $1}')
+STORED_HASH=""
+[ -f "${HASH_STORE}" ] && STORED_HASH=$(cat "${HASH_STORE}")
+
+if [ "${CURRENT_HASH}" = "${STORED_HASH}" ] && [ -f /app/dist/index.html ]; then
+  bashio::log.info "Keys and app version unchanged since last build — reusing existing production build."
+else
+  bashio::log.info "Building production assets (this can take a while on low-spec hardware)..."
+  if npm run build; then
+    echo "${CURRENT_HASH}" > "${HASH_STORE}"
+  else
+    bashio::log.fatal "Production build failed — not marking it as cached, and not starting the preview server on a stale/missing dist/."
+    exit 1
+  fi
+fi
 
 bashio::log.info "Starting preview server..."
 exec npm run preview -- --host "${HOST}" --port "${PORT}"

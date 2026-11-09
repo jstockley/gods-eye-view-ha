@@ -34,12 +34,16 @@ ADD https://api.github.com/repos/jstockley/gods-eye-view-ha/commits/${GEV_REF} /
 RUN git clone --depth 1 --branch ${GEV_REF} \
     https://github.com/jstockley/gods-eye-view-ha.git .
 
+# Recorded so the run script can tell, at container start, whether the
+# cloned app code changed since the last build — see rootfs run script.
+RUN git rev-parse HEAD > /app/.gev-commit
+
 RUN npm ci
 
-# NOTE: intentionally NOT running `npm run build` + `vite preview`.
-# The documented, tested path is the dev server itself
-# (`npm run dev -- --host 0.0.0.0 --port <port>`), which is also what
-# brokers all provider keys server-side via the integrated Vite plugin.
+# The production build itself runs at container start (see rootfs run
+# script), not here — GOOGLE_MAPS_API_KEY/CESIUM_ION_TOKEN are baked in
+# via Vite's `define` at build time, and the real values only exist once
+# the add-on's .env has been written from Home Assistant's options.
 
 COPY rootfs /
 
