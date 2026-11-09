@@ -31,6 +31,11 @@ all gated so they only change behaviour when the server is "shared"
   (`document.baseURI`) instead of the domain root. Dozens of call sites
   across the app use literal `/api/...` paths, which bypass Ingress's
   sub-path entirely without this.
+- **`src/layers/cctv/source.js`** — the same root-absolute-path problem,
+  but for CCTV camera frames/streams, which are set directly as
+  `<img>.src` / `<video>.src` rather than fetched — so the `fetch` patch
+  above never sees them. Fixed at the two URL builders (`frameUrlFor`/
+  `mediaUrlFor`) instead, with the same `document.baseURI` resolution.
 - **`build/vite.js`** — `base: './'` so built asset URLs are relative, not
   root-absolute; a matching `preview` block (Vite resolves `preview`
   options separately from `server` options) so `allowedHosts` and the

@@ -88,6 +88,24 @@ test('frame and media URLs preserve registered camera identity and encoded metad
   assert.deepEqual([...media.searchParams.keys()], ['ts']);
 });
 
+test('frame and media URLs resolve under a Home Assistant Ingress sub-path instead of the domain root', (t) => {
+  const original = globalThis.document;
+  globalThis.document = {
+    baseURI: 'https://home.example.com:8443/api/hassio_ingress/sometoken/',
+  };
+  t.after(() => {
+    globalThis.document = original;
+  });
+  const source = createCctvSource();
+  const frameUrl = source.getFrameUrl(camera);
+  const mediaUrl = source.getMediaUrl(camera);
+  // A plain `<img>.src = '/api/cctv/frame/...'` would resolve against the
+  // domain root in a browser, bypassing Ingress's sub-path entirely —
+  // this is exactly the bug these URLs must not have.
+  assert.ok(frameUrl.startsWith('https://home.example.com:8443/api/hassio_ingress/sometoken/api/cctv/frame/'));
+  assert.ok(mediaUrl.startsWith('https://home.example.com:8443/api/hassio_ingress/sometoken/api/cctv/media/'));
+});
+
 test('camera construction is inert and destruction cancels a pending catalog and its visibility listener', async (t) => {
   const original = globalThis.document;
   const listeners = new Set();
