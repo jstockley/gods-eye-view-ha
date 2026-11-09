@@ -175,6 +175,22 @@ and it carries the LAN-sharing rules alongside [Keys & Costs](#-api-keys).
 
 ---
 
+## 🏠 Installing as a Home Assistant Add-on
+
+This fork can run as a self-hosted Home Assistant add-on, accessible from the
+HA sidebar via Ingress — no separate port or login needed.
+
+1. In Home Assistant: **Settings → Add-ons → Add-on Store → ⋮ → Repositories**
+2. Add this repository's URL: `https://github.com/jstockley/gods-eye-view-ha`
+3. Refresh the store, find **God's Eye View** under the new repository section, and install it
+4. Open **Configuration** on the add-on and add your API keys (all optional except you'll want at least one of `google_maps_api_key` or `cesium_ion_token` for the 3D globe — see the key table below)
+5. Start the add-on, then open it from the Home Assistant sidebar
+
+Full add-on details, configuration options, and known limitations: see
+[`gods_eye_view/README.md`](./gods_eye_view/README.md).
+
+---
+
 ## 🕐 The First Five Minutes
 
 Choose a first-run mission, or try these in order. The GIFs show Google Photorealistic 3D; your starting basemap depends on the keys you've added.

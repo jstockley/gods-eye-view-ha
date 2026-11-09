@@ -57,7 +57,22 @@ export function flyToAustin(viewer) {
   const hasCustomDefault = Number.isFinite(lat) && Number.isFinite(lon);
   const destLat = hasCustomDefault ? lat : 30.2672;
   const destLon = hasCustomDefault ? lon : -97.7431;
-  const saved = JSON.parse(localStorage.getItem('gev:homeView') || 'null'); if (saved) { viewer.camera.setView({ destination: new Cesium.Cartesian3(...saved.destination), orientation: { heading: saved.heading, pitch: saved.pitch, roll: saved.roll }, }); return () => {}; } 
+
+  // Priority 1: a view the user explicitly saved via the "set as default
+  // view" button, stored client-side. Takes precedence over both the
+  // postcode-derived default below and the hardcoded Austin fallback.
+  const saved = JSON.parse(localStorage.getItem('gev:homeView') || 'null');
+  if (saved) {
+    viewer.camera.setView({
+      destination: new Cesium.Cartesian3(...saved.destination),
+      orientation: {
+        heading: saved.heading,
+        pitch: saved.pitch,
+        roll: saved.roll,
+      },
+    });
+    return () => {};
+  }
 
 
   viewer.camera.setView({
